@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
             }
         }
 	    printf("Results are identical!\n");
-        write_times(T1, T2);
+        write_times(T1 * 1000, T2 * 1000);
         printf("Serial running time: %f ms\n", T1 * 1000);
         printf("MPI running time: %f ms\n", T2 * 1000);
         

@@ -71,6 +71,12 @@ void RING_Allreduce(float *sendbuf, float *recvbuf, int count, int op, MPI_Comm 
     free(tempbuf);
 }
 
+void write_times(float T1, float T2) {
+    FILE *file = fopen("output2.txt", "w");
+    fprintf(file, "%.2f,%.2f", T1, T2);
+    fclose(file);
+}
+
 int main(int argc, char *argv[]) {
     int rank, size, n=0, op_type=-1;
     float *array, *mpi_result, *ring_result;
@@ -81,19 +87,37 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
-    // Input array size and operation type from user
+    // Input array size and operation type
     if (rank == 0) {
 
-        while (n <=0) {
-            printf("Enter the size of the array(larger than process num): \n");
-            scanf("%d", &n);
+        FILE *inputFile = fopen("input2.txt", "r");
+        if (!inputFile) {
+            printf("无法打开 input2.txt 文件\n");
+            return 1;
+        }
+        char op_str[10];
+        // Read the input from the file using fscanf
+        if (fscanf(inputFile, "%d,%s", &n, op_str) != 2) {
+            printf("Error: Invalid input format. Expected format: <n>,<operation (sum/max)>\n");
+            
+            fclose(inputFile);
+            MPI_Finalize();
+            return -1;
         }
 
-        while (op_type != 0 && op_type !=1) {
-            printf("Enter the operation (0 for MAX, 1 for SUM): \n");
-            scanf("%d", &op_type);
+        // Parse operation type from the file
+        if (strcmp(op_str, "sum") == 0) {
+            op_type = SUM;
+        } else if (strcmp(op_str, "max") == 0) {
+            op_type = MAX;
+        } else {
+            printf("Error: Invalid operation type. Expected 'sum' or 'max'.\n");
+            fclose(inputFile);
+            MPI_Finalize();
+            return -1;
         }
-        // assert(n >= size);
+
+        fclose(inputFile);  // Close the file after reading
     }
     
     // Broadcast array size and operation type to all processes
@@ -134,9 +158,10 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        printf("Array size: %d\n", n);
+        printf("Array size: %d\nOperation: %s\n", n, (op_type == SUM) ? "SUM" : "MAX");
         printf("MPI_Allreduce time: %f ms\n", mpi_time * 1000);
         printf("RING_Allreduce time: %f ms\n", ring_time * 1000);
+        write_times(mpi_time * 1000, ring_time * 1000);
         if (correct) {
             printf("The results match!\n");
         } else {
