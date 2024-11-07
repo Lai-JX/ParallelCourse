@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
             }
         }
         printf("Array size: %d\nOperation: %s\n", n, (op_type == SUM) ? "SUM" : "MAX");
-        printf("MPI_Allreduce time: %f ms\n", mpi_time * 1000);
-        printf("RING_Allreduce time: %f ms\n", ring_time * 1000);
+        printf("MPI_Allreduce time: %.4f ms\n", mpi_time * 1000);
+        printf("RING_Allreduce time: %.4f ms\n", ring_time * 1000);
         write_times(mpi_time * 1000, ring_time * 1000);
         if (correct) {
             printf("The results match!\n");
